@@ -24,9 +24,9 @@ function secret() {
 
 function getBaseUrl() {
   if (typeof window !== "undefined") {
-    return localStorage.getItem("api_url") || "https://license-api-seven-mocha.vercel.app/license"
+    return localStorage.getItem("api_url") || "https://license-api-seven-mocha.vercel.app"
   }
-  return "https://license-api-seven-mocha.vercel.app/license"
+  return "https://license-api-seven-mocha.vercel.app"
 }
 
 async function req<T>(path: string, init: RequestInit = {}, includeSecret: boolean = true): Promise<T> {
@@ -58,18 +58,18 @@ async function req<T>(path: string, init: RequestInit = {}, includeSecret: boole
 }
 
 export const api = {
-  list: () => req<LicenseKey[]>("/list"),
+  list: () => req<LicenseKey[]>("/license/list"),
   create: (days: number, note: string, system_type: SystemType) => 
-    req<CreateResult>("/create", {
+    req<CreateResult>("/license/create", {
       method: "POST",
       body: JSON.stringify({ days, note, system_type }),
     }, true),
-  revoke: (key: string) => req<{ revoked: boolean; key: string }>("/revoke", {
+  revoke: (key: string) => req<{ revoked: boolean; key: string }>("/license/revoke", {
     method: "POST",
     body: JSON.stringify({ key }),
   }, true),
   validate: (key: string, hwid: string, system_type: SystemType) =>
-    req<{ valid: boolean; message: string }>("/validate", {
+    req<{ valid: boolean; message: string }>("/license/validate", {
       method: "POST",
       body: JSON.stringify({ key, hwid, system_type }),
     }, false),
