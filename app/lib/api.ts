@@ -22,15 +22,31 @@ function secret() {
   return stored || "X7kmP2$qR9vLw4NjZtYsB6hCeKdFuA3"
 }
 
-async function req<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const res = await fetch("/api/proxy" + path, {
+function getBaseUrl() {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("api_url") || "https://license-api-seven-mocha.vercel.app/license"
+  }
+  return "https://license-api-seven-mocha.vercel.app/license"
+}
+
+async function req<T>(path: string, init: RequestInit = {}, includeSecret: boolean = true): Promise<T> {
+  const baseUrl = getBaseUrl()
+  const url = baseUrl.endsWith("/") ? baseUrl + path.slice(1) : baseUrl + path
+  
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(init.headers as Record<string, string> ?? {}),
+  }
+  
+  if (includeSecret) {
+    headers["x-admin-secret"] = secret()
+  }
+  
+  const res = await fetch(url, {
     ...init,
-    headers: {
-      "Content-Type": "application/json",
-      "x-admin-secret": secret(),
-      ...(init.headers ?? {}),
-    },
+    headers,
   })
+  
   if (res.status === 401) throw new Error("Admin secret ไม่ถูกต้อง (401)")
   if (res.status === 403) throw new Error("ไม่มีสิทธิ์เข้าถึง (403)")
   if (!res.ok) {
@@ -42,19 +58,19 @@ async function req<T>(path: string, init: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
-  list: () => req<LicenseKey[]>("/admin/list"),
+  list: () => req<LicenseKey[]>("/list"),
   create: (days: number, note: string, system_type: SystemType) => 
-    req<CreateResult>("/admin/create", {
+    req<CreateResult>("/create", {
       method: "POST",
       body: JSON.stringify({ days, note, system_type }),
-    }),
-  revoke: (key: string) => req<{ revoked: boolean; key: string }>("/admin/revoke", {
+    }, true),
+  revoke: (key: string) => req<{ revoked: boolean; key: string }>("/revoke", {
     method: "POST",
     body: JSON.stringify({ key }),
-  }),
+  }, true),
   validate: (key: string, hwid: string, system_type: SystemType) =>
     req<{ valid: boolean; message: string }>("/validate", {
       method: "POST",
       body: JSON.stringify({ key, hwid, system_type }),
-    }),
+    }, false),
 }
