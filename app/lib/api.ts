@@ -1,12 +1,25 @@
+export type SystemType = "FISHING" | "CAPTCHA"
+
 export interface LicenseKey {
-  key: string; note: string; days: number
-  created_at: string; expires_at: string
-  hwid: string | null; revoked: boolean
+  key: string
+  note: string
+  days: number
+  created_at: string
+  expires_at: string
+  hwid: string | null
+  revoked: boolean
+  system_type: SystemType
 }
-export interface CreateResult { key: string; expires_at: string; note: string }
+export interface CreateResult {
+  key: string
+  expires_at: string
+  note: string
+  system_type: SystemType
+}
 
 function secret() {
-  return typeof window !== "undefined" ? (localStorage.getItem("api_secret") ?? "") : ""
+  const stored = typeof window !== "undefined" ? localStorage.getItem("api_secret") : ""
+  return stored || "X7kmP2$qR9vLw4NjZtYsB6hCeKdFuA3"
 }
 
 async function req<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -29,11 +42,19 @@ async function req<T>(path: string, init: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
-  list:   ()                           => req<LicenseKey[]>("/admin/list"),
-  create: (days: number, note: string) => req<CreateResult>("/admin/create", {
-    method: "POST", body: JSON.stringify({ days, note }),
-  }),
+  list: () => req<LicenseKey[]>("/admin/list"),
+  create: (days: number, note: string, system_type: SystemType) => 
+    req<CreateResult>("/admin/create", {
+      method: "POST",
+      body: JSON.stringify({ days, note, system_type }),
+    }),
   revoke: (key: string) => req<{ revoked: boolean; key: string }>("/admin/revoke", {
-    method: "POST", body: JSON.stringify({ key }),
+    method: "POST",
+    body: JSON.stringify({ key }),
   }),
+  validate: (key: string, hwid: string, system_type: SystemType) =>
+    req<{ valid: boolean; message: string }>("/validate", {
+      method: "POST",
+      body: JSON.stringify({ key, hwid, system_type }),
+    }),
 }

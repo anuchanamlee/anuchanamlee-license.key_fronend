@@ -26,7 +26,8 @@ export default function KeysPage() {
     setFiltered(allKeys.filter(r =>
       r.key.toLowerCase().includes(q) ||
       (r.note ?? "").toLowerCase().includes(q) ||
-      (r.hwid ?? "").toLowerCase().includes(q)
+      (r.hwid ?? "").toLowerCase().includes(q) ||
+      r.system_type.toLowerCase().includes(q)
     ))
   }, [search, allKeys])
 
@@ -50,10 +51,10 @@ export default function KeysPage() {
         </div>
         <div style={{ overflowX: "auto" }}>
           <table className="tbl">
-            <thead><tr>{["Key","Note","วันที่สร้าง","หมดอายุ","HWID","สถานะ",""].map(h => <th key={h}>{h}</th>)}</tr></thead>
+            <thead><tr>{["Key","Note","ระบบ","วันที่สร้าง","หมดอายุ","HWID","สถานะ",""].map(h => <th key={h}>{h}</th>)}</tr></thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={7} style={{ textAlign: "center", color: "var(--muted)", padding: 32 }}>⏳ กำลังโหลด...</td></tr>
+                <tr><td colSpan={8} style={{ textAlign: "center", color: "var(--muted)", padding: 32 }}>⏳ กำลังโหลด...</td></tr>
               ) : filtered.length ? filtered.map(r => (
                 <tr key={r.key}>
                   <td>
@@ -62,6 +63,11 @@ export default function KeysPage() {
                       onClick={() => { navigator.clipboard.writeText(r.key); toast("คัดลอกแล้ว ✓", "success") }}>📋</button>
                   </td>
                   <td>{r.note || "—"}</td>
+                  <td>
+                    <span style={{ fontSize: 12, paddingInline: 6, paddingBlock: 3, borderRadius: 4, background: r.system_type === "FISHING" ? "rgba(100,200,150,.15)" : "rgba(79,142,247,.15)" }}>
+                      {r.system_type === "FISHING" ? "🎣 Fishing" : "🤖 Captcha"}
+                    </span>
+                  </td>
                   <td>{r.created_at || "—"}</td>
                   <td>{r.expires_at}</td>
                   <td><span style={{ fontFamily: "monospace", fontSize: 12, color: "var(--muted)" }}>{r.hwid ? r.hwid.slice(0,8)+"…" : "—"}</span></td>
@@ -73,7 +79,7 @@ export default function KeysPage() {
                   </td>
                 </tr>
               )) : (
-                <tr><td colSpan={7} style={{ textAlign: "center", color: "var(--muted)", padding: 32 }}>ไม่มีข้อมูล</td></tr>
+                <tr><td colSpan={8} style={{ textAlign: "center", color: "var(--muted)", padding: 32 }}>ไม่มีข้อมูล</td></tr>
               )}
             </tbody>
           </table>

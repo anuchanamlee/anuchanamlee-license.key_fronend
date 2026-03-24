@@ -13,8 +13,8 @@ export default function SettingsBar() {
   const { toast } = useToast()
 
   useEffect(() => {
-    setUrl(localStorage.getItem("api_url") || "https://license-b83fzc1vb-anucha-namlees-projects.vercel.app")
-    setSecret(localStorage.getItem("api_secret") || "")
+    setUrl(localStorage.getItem("api_url") || "https://license-api-seven-mocha.vercel.app/license")
+    setSecret(localStorage.getItem("api_secret") || "X7kmP2$qR9vLw4NjZtYsB6hCeKdFuA3")
   }, [])
 
   async function save() {

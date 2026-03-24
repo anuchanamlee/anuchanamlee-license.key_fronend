@@ -1,27 +1,29 @@
 "use client"
 import { useState } from "react"
-import { api, CreateResult } from "../lib/api"
+import { api, CreateResult, SystemType } from "../lib/api"
 import SettingsBar from "../components/SettingsBar"
 import { useToast } from "../components/Toast"
 
 function buildMessage(data: CreateResult, days: number, note: string) {
-  return `สวัสดีครับ คุณ${note} 🎮\n\n✅ License Key สำหรับ Captcha Collector\n━━━━━━━━━━━━━━━━━━━━━\n🔑  ${data.key}\n━━━━━━━━━━━━━━━━━━━━━\n📅 ใช้ได้ ${days} วัน (หมดอายุ ${data.expires_at})\n\nวิธีใช้:\n1. เปิดโปรแกรม CaptchaCollector.exe\n2. ใส่ Key ด้านบนแล้วกด ยืนยัน\n3. ใช้งานได้เลย ✨\n\nหากมีปัญหาติดต่อได้เลยนะครับ`
+  const systemName = data.system_type === "FISHING" ? "Fishing Bot" : "Captcha Collector"
+  return `สวัสดีครับ คุณ${note} 🎮\n\n✅ License Key สำหรับ ${systemName}\n━━━━━━━━━━━━━━━━━━━━━\n🔑  ${data.key}\n━━━━━━━━━━━━━━━━━━━━━\n📅 ใช้ได้ ${days} วัน (หมดอายุ ${data.expires_at})\n🎲 ระบบ: ${systemName}\n\nวิธีใช้:\n1. เปิดโปรแกรม\n2. ใส่ Key แล้วกด ยืนยัน\n3. ใช้งานได้เลย ✨\n\nหากมีปัญหาติดต่อได้เลยนะครับ`
 }
 
 export default function CreatePage() {
-  const [note,    setNote]    = useState("")
-  const [days,    setDays]    = useState(30)
-  const [loading, setLoading] = useState(false)
-  const [result,  setResult]  = useState<CreateResult | null>(null)
-  const [errMsg,  setErrMsg]  = useState("")
-  const [msgText, setMsgText] = useState("")
+  const [note,        setNote]        = useState("")
+  const [days,        setDays]        = useState(30)
+  const [systemType,  setSystemType]  = useState<SystemType>("CAPTCHA")
+  const [loading,     setLoading]     = useState(false)
+  const [result,      setResult]      = useState<CreateResult | null>(null)
+  const [errMsg,      setErrMsg]      = useState("")
+  const [msgText,     setMsgText]     = useState("")
   const { toast } = useToast()
 
   async function createKey() {
     if (!note.trim()) { toast("ใส่ชื่อลูกค้าก่อน", "error"); return }
     setLoading(true); setErrMsg(""); setResult(null)
     try {
-      const data = await api.create(days, note.trim())
+      const data = await api.create(days, note.trim(), systemType)
       setResult(data); setMsgText(buildMessage(data, days, note.trim()))
       toast("สร้าง Key สำเร็จ ✓", "success")
       setTimeout(() => document.getElementById("share-section")?.scrollIntoView({ behavior: "smooth" }), 100)
@@ -52,7 +54,15 @@ export default function CreatePage() {
             <label style={{ fontSize: 12, color: "var(--muted)" }}>จำนวนวัน</label>
             <select className="input" value={days} onChange={e => setDays(+e.target.value)}
               style={{ background: "var(--bg)" }}>
-              {[7,30,90,180,365].map(d => <option key={d} value={d}>{d} วัน</option>)}
+              {[7, 30, 90, 180, 365].map(d => <option key={d} value={d}>{d} วัน</option>)}
+            </select>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 160 }}>
+            <label style={{ fontSize: 12, color: "var(--muted)" }}>ประเภทระบบ</label>
+            <select className="input" value={systemType} onChange={e => setSystemType(e.target.value as SystemType)}
+              style={{ background: "var(--bg)" }}>
+              <option value="CAPTCHA">🤖 Captcha Collector</option>
+              <option value="FISHING">🎣 Fishing Bot</option>
             </select>
           </div>
           <button className="btn btn-primary" onClick={createKey} disabled={loading}>
@@ -63,7 +73,7 @@ export default function CreatePage() {
         {errMsg && <div className="result-box" style={{ color: "var(--error)", borderColor: "var(--error)" }}>❌ {errMsg}</div>}
         {result && (
           <div className="result-box" style={{ color: "var(--success)" }}>
-            {`✓ สร้างสำเร็จ\nKey:       ${result.key}\nหมดอายุ:  ${result.expires_at}\nNote:      ${result.note}`}
+            {`✓ สร้างสำเร็จ\nKey:       ${result.key}\nหมดอายุ:  ${result.expires_at}\nระบบ:     ${result.system_type}\nNote:      ${result.note}`}
           </div>
         )}
       </div>
@@ -76,7 +86,7 @@ export default function CreatePage() {
               <div>
                 <div className="key-big">{result.key}</div>
                 <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}>
-                  หมดอายุ {result.expires_at} · {days} วัน · {note}
+                  หมดอายุ {result.expires_at} · {days} วัน · {note} · {result.system_type}
                 </div>
               </div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
