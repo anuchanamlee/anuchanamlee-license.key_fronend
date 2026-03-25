@@ -37,6 +37,17 @@ export default function KeysPage() {
     catch (e: unknown) { toast((e as Error).message, "error") }
   }
 
+  async function createTestKey() {
+    const testNote = `TEST-${new Date().toISOString().slice(0, 10)}`
+    try {
+      await api.create(1, testNote, "FISHING")
+      toast("สร้าง Test Key FISHING สำเร็จ ✓", "success")
+      load()
+    } catch (e: unknown) {
+      toast((e as Error).message, "error")
+    }
+  }
+
   return (
     <div>
       <SettingsBar />
@@ -48,6 +59,7 @@ export default function KeysPage() {
           <input className="input" style={{ flex: 1 }} placeholder="ค้นหา Key, Note, HWID..."
             value={search} onChange={e => setSearch(e.target.value)} />
           <button className="btn btn-ghost" onClick={load} disabled={loading}>🔄 โหลด</button>
+          <button className="btn btn-secondary" onClick={createTestKey}>🎣 Test Key (1 วัน)</button>
         </div>
         <div style={{ overflowX: "auto" }}>
           <table className="tbl">

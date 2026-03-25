@@ -12,6 +12,8 @@ function buildMessage(data: CreateResult, days: number, note: string) {
 export default function CreatePage() {
   const [note,        setNote]        = useState("")
   const [days,        setDays]        = useState(30)
+  const [customDays,  setCustomDays]  = useState("")
+  const [usePinput,   setUseCustom]   = useState(false)
   const [systemType,  setSystemType]  = useState<SystemType>("CAPTCHA")
   const [loading,     setLoading]     = useState(false)
   const [result,      setResult]      = useState<CreateResult | null>(null)
@@ -21,10 +23,12 @@ export default function CreatePage() {
 
   async function createKey() {
     if (!note.trim()) { toast("ใส่ชื่อลูกค้าก่อน", "error"); return }
+    const finalDays = usePinput ? (customDays ? parseInt(customDays) : 30) : days
+    if (isNaN(finalDays) || finalDays <= 0) { toast("จำนวนวันต้องเป็นตัวเลขที่มากกว่า 0", "error"); return }
     setLoading(true); setErrMsg(""); setResult(null)
     try {
-      const data = await api.create(days, note.trim(), systemType)
-      setResult(data); setMsgText(buildMessage(data, days, note.trim()))
+      const data = await api.create(finalDays, note.trim(), systemType)
+      setResult(data); setMsgText(buildMessage(data, finalDays, note.trim()))
       toast("สร้าง Key สำเร็จ ✓", "success")
       setTimeout(() => document.getElementById("share-section")?.scrollIntoView({ behavior: "smooth" }), 100)
     } catch (e: unknown) {
@@ -52,10 +56,19 @@ export default function CreatePage() {
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 140 }}>
             <label style={{ fontSize: 12, color: "var(--muted)" }}>จำนวนวัน</label>
-            <select className="input" value={days} onChange={e => setDays(+e.target.value)}
-              style={{ background: "var(--bg)" }}>
-              {[7, 30, 90, 180, 365].map(d => <option key={d} value={d}>{d} วัน</option>)}
-            </select>
+            {!usePinput ? (
+              <select className="input" value={days} onChange={e => setDays(+e.target.value)}
+                style={{ background: "var(--bg)" }}>
+                {[7, 30, 90, 180, 365].map(d => <option key={d} value={d}>{d} วัน</option>)}
+              </select>
+            ) : (
+              <input className="input" type="number" placeholder="ระบุจำนวนวัน"
+                value={customDays} onChange={e => setCustomDays(e.target.value)} min="1" />
+            )}
+            <button className="btn btn-ghost" style={{ fontSize: 11, padding: "4px 8px" }}
+              onClick={() => { setUseCustom(!usePinput); setCustomDays("") }}>
+              {usePinput ? "← เลือกจาก preset" : "พิมพ์เองแทน →"}
+            </button>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: 160 }}>
             <label style={{ fontSize: 12, color: "var(--muted)" }}>ประเภทระบบ</label>
@@ -86,7 +99,7 @@ export default function CreatePage() {
               <div>
                 <div className="key-big">{result.key}</div>
                 <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}>
-                  หมดอายุ {result.expires_at} · {days} วัน · {note} · {result.system_type}
+                  หมดอายุ {result.expires_at} · {usePinput ? customDays : days} วัน · {note} · {result.system_type}
                 </div>
               </div>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
