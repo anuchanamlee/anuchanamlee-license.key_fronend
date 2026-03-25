@@ -39,6 +39,20 @@ export default function CreatePage() {
 
   function copy(text: string, label: string) { navigator.clipboard.writeText(text); toast(label, "success") }
 
+  async function createTestKey() {
+    const testNote = `TEST-${new Date().toISOString().slice(0, 10)}`
+    setLoading(true); setErrMsg(""); setResult(null)
+    try {
+      const data = await api.create(1, testNote, "FISHING")
+      setResult(data); setMsgText(buildMessage(data, 1, testNote))
+      toast("สร้าง Test Key FISHING สำเร็จ ✓", "success")
+      setTimeout(() => document.getElementById("share-section")?.scrollIntoView({ behavior: "smooth" }), 100)
+    } catch (e: unknown) {
+      setErrMsg((e as Error).message)
+      toast((e as Error).message, "error")
+    } finally { setLoading(false) }
+  }
+
   return (
     <div>
       <SettingsBar />
@@ -59,7 +73,7 @@ export default function CreatePage() {
             {!usePinput ? (
               <select className="input" value={days} onChange={e => setDays(+e.target.value)}
                 style={{ background: "var(--bg)" }}>
-                {[7, 30, 90, 180, 365].map(d => <option key={d} value={d}>{d} วัน</option>)}
+                {[1, 7, 30, 90, 180, 365].map(d => <option key={d} value={d}>{d} วัน</option>)}
               </select>
             ) : (
               <input className="input" type="number" placeholder="ระบุจำนวนวัน"
@@ -80,6 +94,9 @@ export default function CreatePage() {
           </div>
           <button className="btn btn-primary" onClick={createKey} disabled={loading}>
             {loading ? "⏳ กำลังสร้าง..." : "สร้าง Key"}
+          </button>
+          <button className="btn btn-secondary" onClick={createTestKey} disabled={loading}>
+            🎣 Test Key (1 วัน)
           </button>
         </div>
 
