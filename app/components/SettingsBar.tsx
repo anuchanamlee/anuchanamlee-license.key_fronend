@@ -2,58 +2,115 @@
 import { useEffect, useState } from "react"
 import { api } from "../lib/api"
 import { useToast } from "./Toast"
+import Modal from "./Modal"
 
 type Status = "idle" | "ok" | "err" | "loading"
 
-export default function SettingsBar() {
-  const [url,    setUrl]    = useState("")
+interface SettingsModalProps {
+  open: boolean
+  onClose: () => void
+}
+
+export default function SettingsModal({ open, onClose }: SettingsModalProps) {
+  const [url, setUrl] = useState("")
   const [secret, setSecret] = useState("")
   const [status, setStatus] = useState<Status>("idle")
-  const [label,  setLabel]  = useState("ยังไม่ได้เชื่อมต่อ")
+  const [label, setLabel] = useState("ยังไม่ได้ทดสอบ")
+  const [showSecret, setShowSecret] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
-    setUrl(localStorage.getItem("api_url") || "https://license-api-seven-mocha.vercel.app")
-    setSecret(localStorage.getItem("api_secret") || "X7kmP2$qR9vLw4NjZtYsB6hCeKdFuA3")
-  }, [])
+    if (open) {
+      setUrl(localStorage.getItem("api_url") || "https://license-api-seven-mocha.vercel.app")
+      setSecret(localStorage.getItem("api_secret") || "X7kmP2$qR9vLw4NjZtYsB6hCeKdFuA3")
+    }
+  }, [open])
 
   async function save() {
     localStorage.setItem("api_url", url.trim().replace(/\/$/, ""))
     localStorage.setItem("api_secret", secret.trim())
-    setStatus("loading"); setLabel("กำลังทดสอบ...")
+    setStatus("loading")
+    setLabel("กำลังทดสอบ...")
     try {
       const data = await api.list()
-      setStatus("ok"); setLabel(`เชื่อมต่อแล้ว (${data.length} keys)`)
-      toast("เชื่อมต่อสำเร็จ ✓", "success")
+      setStatus("ok")
+      setLabel(`เชื่อมต่อสำเร็จ (${data.length} keys)`)
+      toast("เชื่อมต่อ API สำเร็จ", "success")
     } catch (e: unknown) {
-      setStatus("err"); setLabel("เชื่อมต่อไม่ได้")
+      setStatus("err")
+      setLabel("เชื่อมต่อไม่ได้")
       toast((e as Error).message, "error")
     }
   }
 
-  const dotColor = status === "ok" ? "var(--success)" : status === "err" ? "var(--error)" : status === "loading" ? "var(--warning)" : "var(--muted)"
-  const lblColor = status === "ok" ? "var(--success)" : status === "err" ? "var(--error)" : "var(--muted)"
+  const dotClass =
+    status === "ok" ? "status-dot-ok" :
+    status === "err" ? "status-dot-err" :
+    status === "loading" ? "status-dot-loading" : "status-dot-idle"
 
   return (
-    <div className="card" style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", padding: "14px 18px", marginBottom: 28 }}>
-      <label style={{ fontSize: 12, color: "var(--muted)", whiteSpace: "nowrap" }}>API URL</label>
-      <input className="input" style={{ flex: 1, minWidth: 200 }} value={url} onChange={e => setUrl(e.target.value)} />
+    <Modal open={open} onClose={onClose} title="ตั้งค่าระบบ" large>
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+        {/* API URL */}
+        <div>
+          <label className="label">API URL</label>
+          <input
+            className="input"
+            value={url}
+            onChange={e => setUrl(e.target.value)}
+            placeholder="https://license-api-seven-mocha.vercel.app"
+          />
+        </div>
 
-      <label style={{ fontSize: 12, color: "var(--muted)", whiteSpace: "nowrap" }}>Admin Secret</label>
-      <input className="input" type="password"
-        style={{ maxWidth: 180, fontFamily: "monospace", letterSpacing: 2 }}
-        value={secret} onChange={e => setSecret(e.target.value)}
-        onKeyDown={e => e.key === "Enter" && save()}
-        placeholder="รหัสผ่าน admin" />
+        {/* Admin Secret */}
+        <div>
+          <label className="label">Admin Secret</label>
+          <div style={{ position: "relative" }}>
+            <input
+              className="input"
+              type={showSecret ? "text" : "password"}
+              value={secret}
+              onChange={e => setSecret(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && save()}
+              placeholder="รหัสผ่าน admin"
+              style={{ fontFamily: "monospace", letterSpacing: 2, paddingRight: 44 }}
+            />
+            <button
+              onClick={() => setShowSecret(!showSecret)}
+              style={{
+                position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
+                background: "none", border: "none", color: "var(--text-muted)",
+                cursor: "pointer", fontSize: 14, padding: "4px 6px", borderRadius: 4,
+              }}
+            >
+              {showSecret ? "ซ่อน" : "แสดง"}
+            </button>
+          </div>
+        </div>
 
-      <button className="btn btn-primary" onClick={save} disabled={status === "loading"}>
-        บันทึก &amp; ทดสอบ
-      </button>
+        {/* Connection Status */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 10,
+          padding: "12px 16px", borderRadius: 8,
+          background: "var(--bg)", border: "1px solid var(--border)",
+        }}>
+          <span className={`status-dot ${dotClass}`} />
+          <span style={{
+            fontSize: 13,
+            color: status === "ok" ? "var(--accent)" : status === "err" ? "var(--danger)" : "var(--text-secondary)"
+          }}>
+            {label}
+          </span>
+        </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
-        <span style={{ width: 8, height: 8, borderRadius: "50%", background: dotColor, display: "inline-block" }} />
-        <span style={{ color: lblColor }}>{label}</span>
+        {/* Actions */}
+        <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+          <button className="btn btn-ghost" onClick={onClose}>ปิด</button>
+          <button className="btn btn-primary" onClick={save} disabled={status === "loading"}>
+            {status === "loading" ? "กำลังทดสอบ..." : "บันทึกและทดสอบ"}
+          </button>
+        </div>
       </div>
-    </div>
+    </Modal>
   )
 }
