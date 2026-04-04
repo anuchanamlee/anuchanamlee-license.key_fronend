@@ -1,8 +1,8 @@
 "use client"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState, useEffect } from "react"
-import SettingsModal from "./SettingsBar"
+import { useState } from "react"
+import { SettingsModal } from "./SettingsBar"
 
 const NAV = [
   { href: "/dashboard", icon: "grid", label: "Dashboard" },
@@ -58,25 +58,18 @@ function NavIcon({ name, size = 18 }: { name: string; size?: number }) {
 
 export { NavIcon }
 
-export default function Sidebar() {
-  const path = usePathname()
-  const [collapsed, setCollapsed] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
-  const [mounted, setMounted] = useState(false)
+interface SidebarProps {
+  collapsed: boolean
+  onCollapsedChange: (collapsed: boolean) => void
+}
 
-  useEffect(() => {
-    setMounted(true)
-    const saved = localStorage.getItem("sidebar_collapsed")
-    if (saved === "true") setCollapsed(true)
-  }, [])
+export default function Sidebar({ collapsed, onCollapsedChange }: SidebarProps) {
+  const path = usePathname()
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   function toggle() {
-    const next = !collapsed
-    setCollapsed(next)
-    localStorage.setItem("sidebar_collapsed", String(next))
+    onCollapsedChange(!collapsed)
   }
-
-  if (!mounted) return null
 
   return (
     <>
@@ -181,7 +174,7 @@ export default function Sidebar() {
         </div>
       </aside>
 
-      <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      {settingsOpen ? <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} /> : null}
     </>
   )
 }

@@ -1,44 +1,52 @@
 "use client"
-import { useEffect, useState } from "react"
+
+import { useState } from "react"
 import { api } from "../lib/api"
 import { useToast } from "./Toast"
 import Modal from "./Modal"
 
 type Status = "idle" | "ok" | "err" | "loading"
 
+const DEFAULT_API_URL = "https://license-api-seven-mocha.vercel.app"
+const DEFAULT_SECRET = "X7kmP2$qR9vLw4NjZtYsB6hCeKdFuA3"
+
+function getStoredApiUrl() {
+  if (typeof window === "undefined") return DEFAULT_API_URL
+  return localStorage.getItem("api_url") || DEFAULT_API_URL
+}
+
+function getStoredSecret() {
+  if (typeof window === "undefined") return DEFAULT_SECRET
+  return localStorage.getItem("api_secret") || DEFAULT_SECRET
+}
+
 interface SettingsModalProps {
   open: boolean
   onClose: () => void
 }
 
-export default function SettingsModal({ open, onClose }: SettingsModalProps) {
-  const [url, setUrl] = useState("")
-  const [secret, setSecret] = useState("")
+export function SettingsModal({ open, onClose }: SettingsModalProps) {
+  const [url, setUrl] = useState(getStoredApiUrl)
+  const [secret, setSecret] = useState(getStoredSecret)
   const [status, setStatus] = useState<Status>("idle")
-  const [label, setLabel] = useState("ยังไม่ได้ทดสอบ")
+  const [label, setLabel] = useState("เธขเธฑเธเนเธกเนเนเธ”เนเธ—เธ”เธชเธญเธ")
   const [showSecret, setShowSecret] = useState(false)
   const { toast } = useToast()
-
-  useEffect(() => {
-    if (open) {
-      setUrl(localStorage.getItem("api_url") || "https://license-api-seven-mocha.vercel.app")
-      setSecret(localStorage.getItem("api_secret") || "X7kmP2$qR9vLw4NjZtYsB6hCeKdFuA3")
-    }
-  }, [open])
 
   async function save() {
     localStorage.setItem("api_url", url.trim().replace(/\/$/, ""))
     localStorage.setItem("api_secret", secret.trim())
     setStatus("loading")
-    setLabel("กำลังทดสอบ...")
+    setLabel("เธเธณเธฅเธฑเธเธ—เธ”เธชเธญเธ...")
+
     try {
       const data = await api.list()
       setStatus("ok")
-      setLabel(`เชื่อมต่อสำเร็จ (${data.length} keys)`)
-      toast("เชื่อมต่อ API สำเร็จ", "success")
+      setLabel(`เน€เธเธทเนเธญเธกเธ•เนเธญเธชเธณเน€เธฃเนเธ (${data.length} keys)`)
+      toast("เน€เธเธทเนเธญเธกเธ•เนเธญ API เธชเธณเน€เธฃเนเธ", "success")
     } catch (e: unknown) {
       setStatus("err")
-      setLabel("เชื่อมต่อไม่ได้")
+      setLabel("เน€เธเธทเนเธญเธกเธ•เนเธญเนเธกเนเนเธ”เน")
       toast((e as Error).message, "error")
     }
   }
@@ -49,20 +57,18 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
     status === "loading" ? "status-dot-loading" : "status-dot-idle"
 
   return (
-    <Modal open={open} onClose={onClose} title="ตั้งค่าระบบ" large>
+    <Modal open={open} onClose={onClose} title="เธ•เธฑเนเธเธเนเธฒเธฃเธฐเธเธ" large>
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-        {/* API URL */}
         <div>
           <label className="label">API URL</label>
           <input
             className="input"
             value={url}
             onChange={e => setUrl(e.target.value)}
-            placeholder="https://license-api-seven-mocha.vercel.app"
+            placeholder={DEFAULT_API_URL}
           />
         </div>
 
-        {/* Admin Secret */}
         <div>
           <label className="label">Admin Secret</label>
           <div style={{ position: "relative" }}>
@@ -72,45 +78,89 @@ export default function SettingsModal({ open, onClose }: SettingsModalProps) {
               value={secret}
               onChange={e => setSecret(e.target.value)}
               onKeyDown={e => e.key === "Enter" && save()}
-              placeholder="รหัสผ่าน admin"
+              placeholder="เธฃเธซเธฑเธชเธเนเธฒเธ admin"
               style={{ fontFamily: "monospace", letterSpacing: 2, paddingRight: 44 }}
             />
             <button
               onClick={() => setShowSecret(!showSecret)}
               style={{
-                position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
-                background: "none", border: "none", color: "var(--text-muted)",
-                cursor: "pointer", fontSize: 14, padding: "4px 6px", borderRadius: 4,
+                position: "absolute",
+                right: 8,
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "none",
+                border: "none",
+                color: "var(--text-muted)",
+                cursor: "pointer",
+                fontSize: 14,
+                padding: "4px 6px",
+                borderRadius: 4,
               }}
             >
-              {showSecret ? "ซ่อน" : "แสดง"}
+              {showSecret ? "เธเนเธญเธ" : "เนเธชเธ”เธ"}
             </button>
           </div>
         </div>
 
-        {/* Connection Status */}
-        <div style={{
-          display: "flex", alignItems: "center", gap: 10,
-          padding: "12px 16px", borderRadius: 8,
-          background: "var(--bg)", border: "1px solid var(--border)",
-        }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "12px 16px",
+            borderRadius: 8,
+            background: "var(--bg)",
+            border: "1px solid var(--border)",
+          }}
+        >
           <span className={`status-dot ${dotClass}`} />
-          <span style={{
-            fontSize: 13,
-            color: status === "ok" ? "var(--accent)" : status === "err" ? "var(--danger)" : "var(--text-secondary)"
-          }}>
+          <span
+            style={{
+              fontSize: 13,
+              color: status === "ok" ? "var(--accent)" : status === "err" ? "var(--danger)" : "var(--text-secondary)",
+            }}
+          >
             {label}
           </span>
         </div>
 
-        {/* Actions */}
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <button className="btn btn-ghost" onClick={onClose}>ปิด</button>
+          <button className="btn btn-ghost" onClick={onClose}>เธเธดเธ”</button>
           <button className="btn btn-primary" onClick={save} disabled={status === "loading"}>
-            {status === "loading" ? "กำลังทดสอบ..." : "บันทึกและทดสอบ"}
+            {status === "loading" ? "เธเธณเธฅเธฑเธเธ—เธ”เธชเธญเธ..." : "เธเธฑเธเธ—เธถเธเนเธฅเธฐเธ—เธ”เธชเธญเธ"}
           </button>
         </div>
       </div>
     </Modal>
+  )
+}
+
+export default function SettingsBar() {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <>
+      <div className="header">
+        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <span
+            style={{
+              fontSize: 11,
+              color: "var(--text-muted)",
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+            }}
+          >
+            System Settings
+          </span>
+          <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>
+            Configure the license API endpoint and admin secret.
+          </span>
+        </div>
+        <button className="btn btn-ghost" onClick={() => setOpen(true)}>
+          Open Settings
+        </button>
+      </div>
+      {open ? <SettingsModal open={open} onClose={() => setOpen(false)} /> : null}
+    </>
   )
 }

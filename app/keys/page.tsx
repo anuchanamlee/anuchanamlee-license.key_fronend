@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { api, LicenseKey } from "../lib/api"
 import SettingsBar from "../components/SettingsBar"
 import StatusBadge from "../components/StatusBadge"
@@ -12,14 +12,14 @@ export default function KeysPage() {
   const [search,   setSearch]   = useState("")
   const { toast } = useToast()
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true)
     try { const data = await api.list(); setAllKeys(data); setFiltered(data) }
     catch (e: unknown) { toast((e as Error).message, "error") }
     finally { setLoading(false) }
-  }
+  }, [toast])
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { void load() }, [load])
 
   useEffect(() => {
     const q = search.toLowerCase()

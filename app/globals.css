@@ -50,7 +50,7 @@ html {
 }
 
 body {
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -474,6 +474,21 @@ textarea.input {
   backdrop-filter: blur(12px);
 }
 
+.app-shell {
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.app-shell-content {
+  min-height: 100vh;
+  margin-left: var(--layout-sidebar-offset, var(--sidebar-w));
+  transition: margin-left var(--transition-slow);
+}
+
+.page-shell {
+  padding: 24px;
+}
+
 /* ===== Pill Buttons (day presets) ===== */
 .pill {
   display: inline-flex;
@@ -699,6 +714,12 @@ textarea.input {
   }
   .stat-grid {
     grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .app-shell-content {
+    margin-left: 0;
+  }
+  .page-shell {
+    padding: 16px;
   }
 }
 

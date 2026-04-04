@@ -1,21 +1,23 @@
 import type { Metadata } from "next"
+import { Inter } from "next/font/google"
 import "./globals.css"
 import ClientLayout from "./components/ClientLayout"
 
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter",
+})
+
 export const metadata: Metadata = {
-  title: "License Admin — Management System",
+  title: "License Admin - Management System",
   description: "Premium license key management dashboard",
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="th">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      </head>
-      <body>
+      <body className={inter.variable}>
         <ClientLayout>{children}</ClientLayout>
       </body>
     </html>

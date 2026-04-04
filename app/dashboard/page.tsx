@@ -1,5 +1,5 @@
 "use client"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { api, LicenseKey } from "../lib/api"
 import SettingsBar from "../components/SettingsBar"
 import StatusBadge from "../components/StatusBadge"
@@ -11,14 +11,14 @@ export default function DashboardPage() {
   const [errMsg,  setErrMsg]  = useState("")
   const { toast } = useToast()
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true); setErrMsg("")
     try   { setKeys(await api.list()) }
     catch (e: unknown) { const m = (e as Error).message; setErrMsg(m); toast(m, "error") }
     finally { setLoading(false) }
-  }
+  }, [toast])
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { void load() }, [load])
 
   const today   = new Date().toISOString().slice(0, 10)
   const active  = keys.filter(r => !r.revoked && r.expires_at >= today).length
