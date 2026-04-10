@@ -6,6 +6,9 @@ export default function StatusBadge({ row }: { row: LicenseKey }) {
   if (row.revoked) {
     return <span className="badge badge-revoked">ยกเลิกแล้ว</span>
   }
+  if (!row.expires_at) {
+    return <span className="badge badge-pending">ยังไม่ใช้งาน</span>
+  }
   if (row.expires_at < today) {
     return <span className="badge badge-expired">หมดอายุ</span>
   }
@@ -15,8 +18,9 @@ export default function StatusBadge({ row }: { row: LicenseKey }) {
   return <span className="badge badge-active">เหลือ {d} วัน</span>
 }
 
-export function getStatus(row: LicenseKey): "active" | "expired" | "revoked" {
+export function getStatus(row: LicenseKey): "active" | "expired" | "revoked" | "pending" {
   if (row.revoked) return "revoked"
+  if (!row.expires_at) return "pending"
   const today = new Date().toISOString().slice(0, 10)
   if (row.expires_at < today) return "expired"
   return "active"

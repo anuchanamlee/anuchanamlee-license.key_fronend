@@ -8,7 +8,7 @@ export interface LicenseKey {
   note: string
   days: number
   created_at: string
-  expires_at: string
+  expires_at: string | null
   hwid: string | null
   revoked: boolean
   system_type: SystemType

@@ -83,7 +83,7 @@ export default function KeysPage() {
                     </span>
                   </td>
                   <td>{r.created_at || "—"}</td>
-                  <td>{r.expires_at}</td>
+                  <td>{r.expires_at || "—"}</td>
                   <td><span style={{ fontFamily: "monospace", fontSize: 12, color: "var(--muted)" }}>{r.hwid ? r.hwid.slice(0,8)+"…" : "—"}</span></td>
                   <td><StatusBadge row={r} /></td>
                   <td>

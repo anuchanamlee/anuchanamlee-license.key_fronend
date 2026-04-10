@@ -16,7 +16,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
   const [url, setUrl] = useState(getStoredApiUrl)
   const [secret, setSecret] = useState(getStoredSecret)
   const [status, setStatus] = useState<Status>("idle")
-  const [label, setLabel] = useState("เธขเธฑเธเนเธกเนเนเธ”เนเธ—เธ”เธชเธญเธ")
+  const [label, setLabel] = useState("ยังไม่ได้ทดสอบ")
   const [showSecret, setShowSecret] = useState(false)
   const { toast } = useToast()
 
@@ -24,16 +24,16 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
     localStorage.setItem("api_url", url.trim().replace(/\/$/, ""))
     localStorage.setItem("api_secret", secret.trim())
     setStatus("loading")
-    setLabel("เธเธณเธฅเธฑเธเธ—เธ”เธชเธญเธ...")
+    setLabel("กำลังทดสอบ...")
 
     try {
       const data = await api.list()
       setStatus("ok")
-      setLabel(`เน€เธเธทเนเธญเธกเธ•เนเธญเธชเธณเน€เธฃเนเธ (${data.length} keys)`)
-      toast("เน€เธเธทเนเธญเธกเธ•เนเธญ API เธชเธณเน€เธฃเนเธ", "success")
+      setLabel(`เชื่อมต่อสำเร็จ (${data.length} keys)`)
+      toast("เชื่อมต่อ API สำเร็จ", "success")
     } catch (e: unknown) {
       setStatus("err")
-      setLabel("เน€เธเธทเนเธญเธกเธ•เนเธญเนเธกเนเนเธ”เน")
+      setLabel("เชื่อมต่อไม่ได้")
       toast((e as Error).message, "error")
     }
   }
@@ -44,7 +44,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
     status === "loading" ? "status-dot-loading" : "status-dot-idle"
 
   return (
-    <Modal open={open} onClose={onClose} title="เธ•เธฑเนเธเธเนเธฒเธฃเธฐเธเธ" large>
+    <Modal open={open} onClose={onClose} title="ตั้งค่าระบบ" large>
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <div>
           <label className="label">API URL</label>
@@ -65,7 +65,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
               value={secret}
               onChange={e => setSecret(e.target.value)}
               onKeyDown={e => e.key === "Enter" && save()}
-              placeholder="เธฃเธซเธฑเธชเธเนเธฒเธ admin"
+              placeholder="รหัสผ่าน admin"
               style={{ fontFamily: "monospace", letterSpacing: 2, paddingRight: 44 }}
             />
             <button
@@ -84,7 +84,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
                 borderRadius: 4,
               }}
             >
-              {showSecret ? "เธเนเธญเธ" : "เนเธชเธ”เธ"}
+              {showSecret ? "ซ่อน" : "แสดง"}
             </button>
           </div>
         </div>
@@ -112,9 +112,9 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
         </div>
 
         <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-          <button className="btn btn-ghost" onClick={onClose}>เธเธดเธ”</button>
+          <button className="btn btn-ghost" onClick={onClose}>ปิด</button>
           <button className="btn btn-primary" onClick={save} disabled={status === "loading"}>
-            {status === "loading" ? "เธเธณเธฅเธฑเธเธ—เธ”เธชเธญเธ..." : "เธเธฑเธเธ—เธถเธเนเธฅเธฐเธ—เธ”เธชเธญเธ"}
+            {status === "loading" ? "กำลังทดสอบ..." : "บันทึกและทดสอบ"}
           </button>
         </div>
       </div>
