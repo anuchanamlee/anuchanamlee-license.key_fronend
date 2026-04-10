@@ -21,7 +21,7 @@ export default function DashboardPage() {
   useEffect(() => { void load() }, [load])
 
   const today   = new Date().toISOString().slice(0, 10)
-  const active  = keys.filter(r => !r.revoked && r.expires_at >= today).length
+  const active  = keys.filter(r => !r.revoked && !!r.expires_at && r.expires_at >= today).length
   const revoked = keys.length - active
 
   return (
