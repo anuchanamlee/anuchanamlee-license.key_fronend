@@ -1,40 +1,42 @@
 "use client"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { api, LicenseKey } from "../lib/api"
 import SettingsBar from "../components/SettingsBar"
 import StatusBadge from "../components/StatusBadge"
 import { useToast } from "../components/Toast"
 
 export default function KeysPage() {
-  const [allKeys,  setAllKeys]  = useState<LicenseKey[]>([])
-  const [filtered, setFiltered] = useState<LicenseKey[]>([])
-  const [loading,  setLoading]  = useState(false)
-  const [search,   setSearch]   = useState("")
+  const [allKeys, setAllKeys] = useState<LicenseKey[]>([])
+  const [loading, setLoading] = useState(false)
+  const [search,  setSearch]  = useState("")
   const { toast } = useToast()
 
   const load = useCallback(async () => {
     setLoading(true)
-    try { const data = await api.list(); setAllKeys(data); setFiltered(data) }
+    try { const data = await api.list(); setAllKeys(data) }
     catch (e: unknown) { toast((e as Error).message, "error") }
     finally { setLoading(false) }
   }, [toast])
 
   useEffect(() => { void load() }, [load])
 
-  useEffect(() => {
+  const filtered = useMemo(() => {
     const q = search.toLowerCase()
-    setFiltered(allKeys.filter(r =>
+    return allKeys.filter(r =>
       r.key.toLowerCase().includes(q) ||
       (r.note ?? "").toLowerCase().includes(q) ||
       (r.hwid ?? "").toLowerCase().includes(q) ||
       r.system_type.toLowerCase().includes(q)
-    ))
+    )
   }, [search, allKeys])
 
   async function revoke(key: string) {
     if (!confirm(`ยืนยันยกเลิก Key นี้?\n\n${key}`)) return
-    try { await api.revoke(key); toast(`ยกเลิก ${key} แล้ว ✓`, "success"); load() }
-    catch (e: unknown) { toast((e as Error).message, "error") }
+    try {
+      await api.revoke(key)
+      toast(`ยกเลิก ${key} แล้ว ✓`, "success")
+      setAllKeys(prev => prev.map(k => k.key === key ? { ...k, revoked: true } : k))
+    } catch (e: unknown) { toast((e as Error).message, "error") }
   }
 
   async function createTestKey() {

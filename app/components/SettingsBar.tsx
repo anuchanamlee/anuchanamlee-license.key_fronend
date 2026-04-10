@@ -1,24 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { api } from "../lib/api"
+import { api, DEFAULT_API_URL, getStoredApiUrl, getStoredSecret } from "../lib/api"
 import { useToast } from "./Toast"
 import Modal from "./Modal"
 
 type Status = "idle" | "ok" | "err" | "loading"
-
-const DEFAULT_API_URL = "https://license-api-seven-mocha.vercel.app"
-const DEFAULT_SECRET = "X7kmP2$qR9vLw4NjZtYsB6hCeKdFuA3"
-
-function getStoredApiUrl() {
-  if (typeof window === "undefined") return DEFAULT_API_URL
-  return localStorage.getItem("api_url") || DEFAULT_API_URL
-}
-
-function getStoredSecret() {
-  if (typeof window === "undefined") return DEFAULT_SECRET
-  return localStorage.getItem("api_secret") || DEFAULT_SECRET
-}
 
 interface SettingsModalProps {
   open: boolean

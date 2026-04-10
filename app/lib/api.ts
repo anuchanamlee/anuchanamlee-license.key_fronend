@@ -1,5 +1,8 @@
 export type SystemType = "FISHING" | "CAPTCHA"
 
+export const DEFAULT_API_URL = "https://license-api-seven-mocha.vercel.app"
+export const DEFAULT_SECRET = "X7kmP2$qR9vLw4NjZtYsB6hCeKdFuA3"
+
 export interface LicenseKey {
   key: string
   note: string
@@ -17,29 +20,27 @@ export interface CreateResult {
   system_type: SystemType
 }
 
-function secret() {
-  const stored = typeof window !== "undefined" ? localStorage.getItem("api_secret") : ""
-  return stored || "X7kmP2$qR9vLw4NjZtYsB6hCeKdFuA3"
+export function getStoredSecret() {
+  if (typeof window === "undefined") return DEFAULT_SECRET
+  return localStorage.getItem("api_secret") || DEFAULT_SECRET
 }
 
-function getBaseUrl() {
-  if (typeof window !== "undefined") {
-    return localStorage.getItem("api_url") || "https://license-api-seven-mocha.vercel.app"
-  }
-  return "https://license-api-seven-mocha.vercel.app"
+export function getStoredApiUrl() {
+  if (typeof window === "undefined") return DEFAULT_API_URL
+  return localStorage.getItem("api_url") || DEFAULT_API_URL
 }
 
 async function req<T>(path: string, init: RequestInit = {}, includeSecret: boolean = true): Promise<T> {
-  const baseUrl = getBaseUrl()
+  const baseUrl = getStoredApiUrl()
   const url = baseUrl.endsWith("/") ? baseUrl + path.slice(1) : baseUrl + path
   
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...(init.headers as Record<string, string> ?? {}),
   }
-  
+
   if (includeSecret) {
-    headers["x-admin-secret"] = secret()
+    headers["x-admin-secret"] = getStoredSecret()
   }
   
   const res = await fetch(url, {
@@ -59,13 +60,13 @@ async function req<T>(path: string, init: RequestInit = {}, includeSecret: boole
 
 export const api = {
   list: () => req<LicenseKey[]>("/license/list"),
-  create: (days: number, note: string, system_type: SystemType) => 
+  create: (days: number, note: string, system_type: SystemType) =>
     req<CreateResult>("/license/create", {
       method: "POST",
       body: JSON.stringify({ days, note, system_type }),
-    }, true),
+    }),
   revoke: (key: string) => req<{ revoked: boolean; key: string }>("/license/revoke", {
-    method: "POST",
+    method: "PATCH",
     body: JSON.stringify({ key }),
   }, true),
   validate: (key: string, hwid: string, system_type: SystemType) =>
