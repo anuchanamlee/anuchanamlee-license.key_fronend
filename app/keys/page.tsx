@@ -1,6 +1,6 @@
 "use client"
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { api, LicenseKey } from "../lib/api"
+import { api, LicenseKey, SystemType } from "../lib/api"
 import SettingsBar from "../components/SettingsBar"
 import StatusBadge from "../components/StatusBadge"
 import { useToast } from "../components/Toast"
@@ -10,6 +10,13 @@ export default function KeysPage() {
   const [loading, setLoading] = useState(false)
   const [search,  setSearch]  = useState("")
   const { toast } = useToast()
+
+  // ── Create key form state ──
+  const [showForm, setShowForm]     = useState(false)
+  const [formDays, setFormDays]     = useState(30)
+  const [formNote, setFormNote]     = useState("")
+  const [formSystem, setFormSystem] = useState<SystemType>("CAPTCHA")
+  const [creating, setCreating]     = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -39,14 +46,23 @@ export default function KeysPage() {
     } catch (e: unknown) { toast((e as Error).message, "error") }
   }
 
-  async function createTestKey() {
-    const testNote = `TEST-${new Date().toISOString().slice(0, 10)}`
+  async function handleCreate() {
+    if (formDays < 1 || formDays > 3650) {
+      toast("จำนวนวันต้องอยู่ระหว่าง 1–3650", "error")
+      return
+    }
+    setCreating(true)
     try {
-      await api.create(1, testNote, "FISHING")
-      toast("สร้าง Test Key FISHING สำเร็จ ✓", "success")
+      const res = await api.create(formDays, formNote.trim(), formSystem)
+      toast(`สร้าง Key สำเร็จ: ${res.key} ✓`, "success")
+      setShowForm(false)
+      setFormNote("")
+      setFormDays(30)
       load()
     } catch (e: unknown) {
       toast((e as Error).message, "error")
+    } finally {
+      setCreating(false)
     }
   }
 
@@ -56,12 +72,63 @@ export default function KeysPage() {
       <p style={{ fontSize: 20, fontWeight: 700, marginBottom: 6 }}>รายการ Key ทั้งหมด</p>
       <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 24 }}>จัดการและยกเลิก License Key</p>
 
+      {/* ── Create Key Form ── */}
+      {showForm && (
+        <div className="card" style={{ marginBottom: 16, border: "1px solid var(--accent)" }}>
+          <p style={{ fontWeight: 700, marginBottom: 12 }}>สร้าง Key ใหม่</p>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <label style={{ fontSize: 12, color: "var(--muted)" }}>ระบบ</label>
+              <select
+                className="input"
+                style={{ minWidth: 140 }}
+                value={formSystem}
+                onChange={e => setFormSystem(e.target.value as SystemType)}
+              >
+                <option value="CAPTCHA">🤖 Captcha (CNN)</option>
+                <option value="FISHING">🎣 Fishing</option>
+              </select>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <label style={{ fontSize: 12, color: "var(--muted)" }}>จำนวนวัน</label>
+              <input
+                className="input"
+                type="number"
+                min={1}
+                max={3650}
+                style={{ width: 100 }}
+                value={formDays}
+                onChange={e => setFormDays(Number(e.target.value))}
+              />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, minWidth: 200 }}>
+              <label style={{ fontSize: 12, color: "var(--muted)" }}>โน้ต (ไม่บังคับ)</label>
+              <input
+                className="input"
+                placeholder="ชื่อลูกค้า หรือหมายเหตุ..."
+                value={formNote}
+                onChange={e => setFormNote(e.target.value)}
+              />
+            </div>
+            <button className="btn btn-primary" onClick={handleCreate} disabled={creating}>
+              {creating ? "กำลังสร้าง..." : "สร้าง Key"}
+            </button>
+            <button className="btn btn-ghost" onClick={() => setShowForm(false)}>ยกเลิก</button>
+          </div>
+        </div>
+      )}
+
       <div className="card">
-        <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-          <input className="input" style={{ flex: 1 }} placeholder="ค้นหา Key, Note, HWID..."
+        <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+          <input className="input" style={{ flex: 1, minWidth: 200 }} placeholder="ค้นหา Key, Note, HWID..."
             value={search} onChange={e => setSearch(e.target.value)} />
           <button className="btn btn-ghost" onClick={load} disabled={loading}>🔄 โหลด</button>
-          <button className="btn btn-secondary" onClick={createTestKey}>🎣 Test Key (1 วัน)</button>
+          <button
+            className="btn btn-primary"
+            onClick={() => { setFormSystem("CAPTCHA"); setShowForm(s => !s) }}
+          >
+            + สร้าง Key
+          </button>
         </div>
         <div style={{ overflowX: "auto" }}>
           <table className="tbl">
